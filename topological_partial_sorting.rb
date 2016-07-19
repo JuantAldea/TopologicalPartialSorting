@@ -164,7 +164,7 @@ def deph_graph_for_action (action_list, component, action)
     return action_sub_list
 end
 
-def action_graph_to_dot_language (list)
+def action_graph_to_dot_language (list, title)
     configuration = "layout=fdp; compound=true; nodesep=1.0;\n"
 
     subgraphs = ""
@@ -183,20 +183,19 @@ def action_graph_to_dot_language (list)
         cluster_edges += "\t#{origin} -> #{destination} [ltail=#{origin}, lhead=#{destination}];\n"
     end
 
-    return "digraph G {\n\t#{configuration}\n#{subgraphs}\n#{cluster_edges}}";
+    return "digraph G {\n\t#{configuration}\n#{subgraphs}\n#{cluster_edges}\n label=\"#{title}\"\n}";
 end
 
-def to_dot_language (graph)
+def to_dot_language (graph, title)
     edges = ""
     configuration = ""
-    pp "BROZA"
     pp graph
     graph.each do | source_node, value |
         value[:depends_on].each do | destination_node |
             edges += "\t#{source_node} -> #{destination_node};\n"
         end
     end
-    graph_str = "digraph {\n#{configuration}\n #{edges}}";
+    graph_str = "digraph {\n#{configuration}\n #{edges}\nlabelloc=\"t\";\nlabel=\"#{title}\";}";
     pp graph_str
     return graph_str
 end
@@ -209,8 +208,8 @@ pp COMP
 
 ACTION = ARGV[0]
 
-dot_graph = to_dot_language(graph)
-#puts dot_graph
+dot_graph = to_dot_language(graph, "Component_Graph")
+puts dot_graph
 %x[echo "#{dot_graph}" | dot -Tpng -o graph.png]
 
 partial_graph = get_partial_graph(graph, COMP, ACTION)
@@ -221,15 +220,13 @@ action_list = topological_partial_sorting(partial_graph, COMP, ACTION)
 print "action list "
 pp action_list
 
-dot_action_graph = action_graph_to_dot_language(action_list)
+dot_action_graph = action_graph_to_dot_language(action_list, ACTION)
 #puts dot_action_graph
 %x[echo "#{dot_action_graph}" | dot -Tpng -o graph_action.png]
 
-action_graph = deph_graph_for_action(action_list, COMP, "pollica")
+action_graph = deph_graph_for_action(action_list, COMP, ACTION)
 print "action_graph "
 pp action_graph
-#dot_action_graph = action_graph_to_dot_language(stop_graph)
-#%x[echo "#{dot_action_graph}" | dot -Tpng -o stop_graph_action.png]
+#dot_action_graph = action_graph_to_dot_language(action_graph, ACTION)
+%x[echo "#{dot_action_graph}" | dot -Tpng -o graph_action_#{ACTION}.png]
 
-
-#pp graph
